@@ -10,3 +10,4 @@ Getting Started
    requirements
    installation
    configuring
+   autocreation

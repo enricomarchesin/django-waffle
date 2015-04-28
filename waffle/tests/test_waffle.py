@@ -279,6 +279,12 @@ class WaffleTests(TestCase):
         response = self.client.get('/flag_in_view?dwft_myflag=1')
         self.assertEqual(b'on', response.content)
 
+    @override_settings(WAFFLE_FLAG_AUTOCREATE=True)
+    @override_settings(WAFFLE_FLAG_DEFAULTS={'foo': { 'everyone': True }})
+    def test_autocreation(self):
+        request = get()
+        assert waffle.flag_is_active(request, 'foo')
+
 
 class SwitchTests(TestCase):
     def test_switch_active(self):
@@ -325,6 +331,11 @@ class SwitchTests(TestCase):
         assert not waffle.switch_is_active('foo')
         self.assertEqual(queries, len(connection.queries), 'We should only make one query.')
 
+    @override_settings(WAFFLE_SWITCH_AUTOCREATE=True)
+    @override_settings(WAFFLE_SWITCH_DEFAULTS={'foo': { 'active': True }})
+    def test_autocreation(self):
+        assert waffle.switch_is_active('foo')
+
 
 class SampleTests(TestCase):
     def test_sample_100(self):
@@ -340,4 +351,9 @@ class SampleTests(TestCase):
 
     @override_settings(WAFFLE_SAMPLE_DEFAULT=True)
     def test_undefined_default(self):
+        assert waffle.sample_is_active('foo')
+
+    @override_settings(WAFFLE_SAMPLE_AUTOCREATE=True)
+    @override_settings(WAFFLE_SAMPLE_DEFAULTS={'foo': { 'percent': 100 }})
+    def test_autocreation(self):
         assert waffle.sample_is_active('foo')

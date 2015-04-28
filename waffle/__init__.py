@@ -28,11 +28,16 @@ def flag_is_active(request, flag_name):
 
     flag = cache.get(keyfmt(get_setting('FLAG_CACHE_KEY'), flag_name))
     if flag is None:
-        try:
-            flag = Flag.objects.get(name=flag_name)
-            cache_flag(instance=flag)
-        except Flag.DoesNotExist:
-            return get_setting('FLAG_DEFAULT')
+        if get_setting('FLAG_AUTOCREATE', False):
+            defaults = get_setting('FLAG_DEFAULTS', {})
+            flag, created = Flag.objects.get_or_create(name=flag_name,
+                    defaults=defaults.get(flag_name, {}))
+        else:
+            try:
+                flag = Flag.objects.get(name=flag_name)
+            except Flag.DoesNotExist:
+                return get_setting('FLAG_DEFAULT', False)
+        cache_flag(instance=flag)
 
     if get_setting('OVERRIDE'):
         if flag_name in request.GET:
@@ -115,13 +120,17 @@ def switch_is_active(switch_name):
 
     switch = cache.get(keyfmt(get_setting('SWITCH_CACHE_KEY'), switch_name))
     if switch is None:
-        try:
-            switch = Switch.objects.get(name=switch_name)
-            cache_switch(instance=switch)
-        except Switch.DoesNotExist:
-            switch = DoesNotExist()
-            switch.name = switch_name
-            cache_switch(instance=switch)
+        if get_setting('SWITCH_AUTOCREATE', False):
+            defaults = get_setting('SWITCH_DEFAULTS', {})
+            switch, created = Switch.objects.get_or_create(name=switch_name,
+                    defaults=defaults.get(switch_name, {}))
+        else:
+            try:
+                switch = Switch.objects.get(name=switch_name)
+            except Switch.DoesNotExist:
+                switch = DoesNotExist()
+                switch.name = switch_name
+        cache_switch(instance=switch)
     return switch.active
 
 
@@ -131,10 +140,15 @@ def sample_is_active(sample_name):
 
     sample = cache.get(keyfmt(get_setting('SAMPLE_CACHE_KEY'), sample_name))
     if sample is None:
-        try:
-            sample = Sample.objects.get(name=sample_name)
-            cache_sample(instance=sample)
-        except Sample.DoesNotExist:
-            return get_setting('SAMPLE_DEFAULT')
+        if get_setting('SAMPLE_AUTOCREATE', False):
+            defaults = get_setting('SAMPLE_DEFAULTS', {})
+            sample, created = Sample.objects.get_or_create(name=sample_name,
+                    defaults=defaults.get(sample_name, {}))
+        else:
+            try:
+                sample = Sample.objects.get(name=sample_name)
+            except Sample.DoesNotExist:
+                return get_setting('SAMPLE_DEFAULT', False)
+        cache_sample(instance=sample)
 
     return Decimal(str(random.uniform(0, 100))) <= sample.percent
