@@ -7,11 +7,14 @@ from django.conf import settings
 from . import defaults
 
 
-def get_setting(name):
-    try:
-        return getattr(settings, 'WAFFLE_' + name)
-    except AttributeError:
-        return getattr(defaults, name)
+def get_setting(name, default=None):
+	if default:
+		return getattr(settings, 'WAFFLE_' + name, default)
+	else:
+		try:
+			return getattr(settings, 'WAFFLE_' + name)
+		except AttributeError:
+			return getattr(defaults, name)
 
 
 def keyfmt(k, v=None):
